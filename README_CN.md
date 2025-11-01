@@ -166,6 +166,43 @@ ANTHROPIC_BASE_URL=https://api.moonshot.cn/anthropic
 claude --model glm-4-plus [其他参数...]
 ```
 
+## 使用 `--` 分离参数
+
+工具支持 `--` 分隔符来清晰区分 `ai-claude-start` 的参数和 Claude Code 的参数：
+
+### 语法
+```bash
+ai-claude-start [ai-claude-start-参数] -- [claude-code-参数]
+```
+
+- `--` 之前的所有内容由 `ai-claude-start` 处理（配置名、选项等）
+- `--` 之后的所有内容直接传递给 Claude Code
+
+### 示例
+
+**使用 Claude 特定的标志**：
+```bash
+# 使用默认配置和 Claude Code 参数
+ai-claude-start -- --dangerously-skip-permissions
+
+ai-claude-start -- --continue
+
+# 使用指定配置和 Claude Code 参数
+ai-claude-start my-profile -- --dangerously-skip-permissions
+
+ai-claude-start my-profile -- --continue
+
+```
+
+**何时使用 `--`**：
+- 需要传递可能与 `ai-claude-start` 选项冲突的标志时
+- 希望更清晰地区分不同用途的参数时
+- 使用复杂的命令结构和多个标志时
+
+**何时 `--` 是可选的**：
+- 对于简单情况如 `ai-claude-start my-profile --version`，不需要分隔符
+- 工具会智能解析配置名与 Claude 参数
+
 ## 无需 Claude CLI 测试
 
 用于测试或开发，无需安装实际的 Claude CLI：

@@ -166,6 +166,42 @@ If a model is configured in the profile, the `--model` parameter is automaticall
 claude --model glm-4-plus [other arguments...]
 ```
 
+## Argument Separation with `--`
+
+The tool supports the `--` separator to clearly distinguish between arguments for `ai-claude-start` and arguments for the Claude CLI:
+
+### Syntax
+```bash
+ai-claude-start [ai-claude-start-args] -- [claude-code-args]
+```
+
+- Everything before `--` is processed by `ai-claude-start` (profile name, options, etc.)
+- Everything after `--` is passed directly to the Claude CLI
+
+### Examples
+
+**Using Claude-specific flags**:
+```bash
+# Use default profile with Claude Code flags
+ai-claude-start -- --dangerously-skip-permissions
+
+ai-claude-start -- --continue
+
+# Use specific profile with Claude Code flags
+ai-claude-start my-profile -- --dangerously-skip-permissions
+
+ai-claude-start my-profile -- --continue
+```
+
+**When to use `--`**:
+- When you need to pass flags that might conflict with `ai-claude-start` options
+- When you want clearer separation of concerns
+- When using complex command structures with multiple flags
+
+**When `--` is optional**:
+- For simple cases like `ai-claude-start my-profile --version`, the separator is not needed
+- The tool intelligently parses profile names vs. Claude arguments
+
 ## Testing Without Claude CLI
 
 For testing or development without the actual Claude CLI installed:

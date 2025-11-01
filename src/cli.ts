@@ -57,6 +57,7 @@ program
 
 // Handle direct execution: claude-start [profile] [args...]
 // or: claude-start [args...] (uses default profile)
+// or: claude-start [ai-claude-args] -- [claude-args]
 program.action(async (options, cmd) => {
   const args = process.argv.slice(2);
 
@@ -78,19 +79,39 @@ program.action(async (options, cmd) => {
     return;
   }
 
-  // Check if first arg is a profile name
-  const config = readConfig();
-  const firstArgIsProfile = args.length > 0 && config.profiles.some((p) => p.name === args[0]);
+  // Support -- separator like dlv: everything before -- is for ai-claude-start,
+  // everything after -- is passed directly to claude
+  const doubleDashIndex = args.indexOf('--');
 
   let profileName: string | undefined;
   let claudeArgs: string[];
 
-  if (firstArgIsProfile) {
-    profileName = args[0];
-    claudeArgs = args.slice(1);
+  if (doubleDashIndex >= 0) {
+    // Using -- separator
+    const aiArgs = args.slice(0, doubleDashIndex);
+    claudeArgs = args.slice(doubleDashIndex + 1);
+
+    // Check if first arg in ai-claude-start section is a profile name
+    const config = readConfig();
+    const firstArgIsProfile = aiArgs.length > 0 && config.profiles.some((p) => p.name === aiArgs[0]);
+
+    if (firstArgIsProfile) {
+      profileName = aiArgs[0];
+    } else {
+      profileName = undefined; // Use default
+    }
   } else {
-    profileName = undefined; // Use default
-    claudeArgs = args;
+    // No -- separator, use original logic
+    const config = readConfig();
+    const firstArgIsProfile = args.length > 0 && config.profiles.some((p) => p.name === args[0]);
+
+    if (firstArgIsProfile) {
+      profileName = args[0];
+      claudeArgs = args.slice(1);
+    } else {
+      profileName = undefined; // Use default
+      claudeArgs = args;
+    }
   }
 
   await executeWithProfile(profileName, claudeArgs);
