@@ -55,45 +55,61 @@ program
     await doctor();
   });
 
-// Handle direct execution: claude-start [profile] [args...]
-// or: claude-start [args...] (uses default profile)
-program.action(async (options, cmd) => {
-  const args = process.argv.slice(2);
+// Custom argument parsing to handle -profile syntax and unknown options
+const rawArgs = process.argv.slice(2);
+const subcommands = ['setup', 'list', 'default', 'delete', 'doctor'];
 
-  // If no arguments, check if we have any profiles
-  if (args.length === 0) {
+// Determine if we should let Commander parse (subcommands or help/version flags)
+const needsCommanderParsing =
+  (rawArgs.length > 0 && subcommands.includes(rawArgs[0])) ||
+  rawArgs.includes('-h') ||
+  rawArgs.includes('--help') ||
+  rawArgs.includes('-V') ||
+  rawArgs.includes('--version');
+
+if (needsCommanderParsing) {
+  program.parse();
+} else {
+  // Handle direct execution with custom parsing
+  (async () => {
     const config = readConfig();
+
+    // If no profiles configured
     if (config.profiles.length === 0) {
       console.log(chalk.yellow('No profiles configured.'));
       console.log(chalk.blue('Run "ai-claude-start setup" to create your first profile.\n'));
       program.help();
       return;
     }
-  }
 
-  // Check if first arg is a subcommand
-  const subcommands = ['setup', 'list', 'default', 'delete', 'doctor'];
-  if (args.length > 0 && subcommands.includes(args[0])) {
-    // Let commander handle it
-    return;
-  }
+    // Parse arguments to extract profile name and Claude args
+    let profileName: string | undefined;
+    let claudeArgs: string[];
+    let argsToProcess = [...rawArgs];
 
-  // Check if first arg is a profile name
-  const config = readConfig();
-  const firstArgIsProfile = args.length > 0 && config.profiles.some((p) => p.name === args[0]);
+    // Check for -profile syntax (e.g., -moonshot)
+    if (argsToProcess.length > 0 && argsToProcess[0].startsWith('-')) {
+      const potentialProfile = argsToProcess[0].substring(1); // Remove the leading -
+      const profileExists = config.profiles.some((p) => p.name === potentialProfile);
+      
+      if (profileExists) {
+        profileName = potentialProfile;
+        argsToProcess = argsToProcess.slice(1); // Remove the -profile arg
+      } else {
+        // Not a valid profile, treat as regular arg for Claude
+        profileName = undefined;
+      }
+    }
+    // Check for regular profile name syntax (e.g., moonshot)
+    else if (argsToProcess.length > 0 && config.profiles.some((p) => p.name === argsToProcess[0])) {
+      profileName = argsToProcess[0];
+      argsToProcess = argsToProcess.slice(1);
+    } else {
+      profileName = undefined; // Use default
+    }
 
-  let profileName: string | undefined;
-  let claudeArgs: string[];
+    claudeArgs = argsToProcess;
 
-  if (firstArgIsProfile) {
-    profileName = args[0];
-    claudeArgs = args.slice(1);
-  } else {
-    profileName = undefined; // Use default
-    claudeArgs = args;
-  }
-
-  await executeWithProfile(profileName, claudeArgs);
-});
-
-program.parse();
+    await executeWithProfile(profileName, claudeArgs);
+  })();
+}

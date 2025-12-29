@@ -1,35 +1,26 @@
 #!/bin/bash
 
-# 测试 keytar 修复
-
-set -e
-
-echo "🧪 Testing keytar fix..."
+echo "=== 测试 1: 无参数调用（应该显示 profile 选择或自动使用） ==="
+echo "Running: node dist/cli.js --cmd echo"
+node dist/cli.js --cmd "echo" "test" 2>&1 | head -n 10
 echo ""
 
-# 使用临时配置
-export AI_CLAUDE_CONFIG_PATH="/tmp/test-fix-$$.json"
-trap "rm -f $AI_CLAUDE_CONFIG_PATH; unset AI_CLAUDE_CONFIG_PATH" EXIT
-
-echo "📁 Using test config: $AI_CLAUDE_CONFIG_PATH"
+echo "=== 测试 2: --help 参数（应该显示帮助信息） ==="
+echo "Running: node dist/cli.js --help"
+node dist/cli.js --help 2>&1 | head -n 5
 echo ""
 
-# 测试 doctor
-echo "1️⃣  Testing doctor command..."
-ai-claude-start doctor
+echo "=== 测试 3: -h 参数（应该显示帮助信息） ==="
+echo "Running: node dist/cli.js -h"
+node dist/cli.js -h 2>&1 | head -n 5
 echo ""
 
-# 测试 list（空配置）
-echo "2️⃣  Testing list command (should be empty)..."
-ai-claude-start list
+echo "=== 测试 4: list 子命令（应该列出 profiles） ==="
+echo "Running: node dist/cli.js list"
+node dist/cli.js list 2>&1
 echo ""
 
-echo "✅ Basic commands work!"
+echo "=== 测试 5: --version 参数（应该显示版本） ==="
+echo "Running: node dist/cli.js --version"
+node dist/cli.js --version 2>&1
 echo ""
-echo "3️⃣  To test profile creation, run manually:"
-echo "   export AI_CLAUDE_CONFIG_PATH=\"/tmp/test.json\""
-echo "   ai-claude-start setup"
-echo "   # Select BigModel (智谱), enter name and test token"
-echo "   ai-claude-start list"
-echo ""
-echo "🧹 Test config will be cleaned up automatically."

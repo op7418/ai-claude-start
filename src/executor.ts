@@ -61,39 +61,33 @@ export async function executeWithProfile(
       process.exit(1);
     }
   } else {
-    // No profile specified, show interactive selection
+    // No profile specified, always show interactive selection
     if (config.profiles.length === 0) {
       console.error(chalk.red('No profiles configured.'));
       console.log(chalk.yellow('Run "ai-claude-start setup" to create a profile.'));
       process.exit(1);
     }
 
-    if (config.profiles.length === 1) {
-      // Only one profile, use it automatically
-      targetProfile = config.profiles[0];
-      console.log(chalk.blue(`Using profile: ${chalk.bold(targetProfile.name)}`));
-    } else {
-      // Multiple profiles, show selection menu
-      const { selectedProfile } = await inquirer.prompt<{ selectedProfile: string }>([
-        {
-          type: 'list',
-          name: 'selectedProfile',
-          message: 'Select a profile to use:',
-          choices: config.profiles.map((p) => ({
-            name: p.name === config.defaultProfile
-              ? `${p.name} ${chalk.green('(default)')}`
-              : p.name,
-            value: p.name
-          })),
-          default: config.defaultProfile
-        }
-      ]);
-
-      targetProfile = config.profiles.find((p) => p.name === selectedProfile);
-      if (!targetProfile) {
-        console.error(chalk.red(`Profile "${selectedProfile}" not found.`));
-        process.exit(1);
+    // Always show selection menu for user to actively choose
+    const { selectedProfile } = await inquirer.prompt<{ selectedProfile: string }>([
+      {
+        type: 'list',
+        name: 'selectedProfile',
+        message: 'Select a profile to use:',
+        choices: config.profiles.map((p) => ({
+          name: p.name === config.defaultProfile
+            ? `${p.name} ${chalk.green('(default)')}`
+            : p.name,
+          value: p.name
+        })),
+        default: config.defaultProfile
       }
+    ]);
+
+    targetProfile = config.profiles.find((p) => p.name === selectedProfile);
+    if (!targetProfile) {
+      console.error(chalk.red(`Profile "${selectedProfile}" not found.`));
+      process.exit(1);
     }
   }
 
