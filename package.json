@@ -1,6 +1,6 @@
 {
   "name": "ai-claude-start",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "Multi-profile Claude CLI launcher with secure credential management",
   "type": "module",
   "main": "dist/index.js",
