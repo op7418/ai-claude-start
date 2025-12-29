@@ -67,6 +67,12 @@ claude-start
 claude-start my-profile
 ```
 
+**快捷配置语法**（简写）：
+```bash
+claude-start -moonshot           # 使用 -配置名 语法
+claude-start -bigmodel --version # 结合 Claude 参数
+```
+
 **传递参数给 Claude**：
 ```bash
 claude-start my-profile --version
@@ -381,6 +387,10 @@ claude-start
 claude-start moonshot      # 使用 Moonshot
 claude-start bigmodel      # 使用智谱
 claude-start anthropic     # 使用 Anthropic
+
+# 方式 3：快捷语法（简写）
+claude-start -moonshot     # 使用 -配置名
+claude-start -bigmodel     # 输入更快
 ```
 
 ### 设置默认配置

@@ -67,6 +67,12 @@ claude-start
 claude-start my-profile
 ```
 
+**Quick profile syntax** (shorthand):
+```bash
+claude-start -moonshot           # Use -profilename syntax
+claude-start -bigmodel --version # Combine with Claude arguments
+```
+
 **Pass arguments to Claude**:
 ```bash
 claude-start my-profile --version
@@ -381,6 +387,10 @@ claude-start
 claude-start moonshot      # Use Moonshot
 claude-start bigmodel      # Use BigModel
 claude-start anthropic     # Use Anthropic
+
+# Method 3: Quick syntax (shorthand)
+claude-start -moonshot     # Use -profilename
+claude-start -bigmodel     # Faster typing
 ```
 
 ### Set Default Profile

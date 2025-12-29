@@ -2,6 +2,8 @@
 src/
 *.test.ts
 *.test.js
+*-test.ts
+*-test.js
 
 # Development files
 tsconfig.json
@@ -11,7 +13,10 @@ vitest.config.ts
 
 # Test and demo scripts
 test-*.sh
+test-*.js
 demo-*.sh
+debug-*.sh
+verify-*.sh
 
 # Documentation (keep README)
 *.md
@@ -22,6 +27,7 @@ demo-*.sh
 .ai-claude-profiles.json
 .env
 .env.local
+.claude/
 
 # OS files
 .DS_Store
