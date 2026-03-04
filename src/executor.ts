@@ -5,39 +5,26 @@ import { readConfig, getCredential } from './storage.js';
 import type { Profile } from './types.js';
 
 /**
- * Sanitize environment variables - remove all ANTHROPIC_* vars
+ * Build --settings argument for claude CLI
+ * Uses --settings to set env vars with higher priority than environment variables
+ * This allows overriding settings.json in code repositories
  */
-export function sanitizeEnvironment(): Record<string, string> {
-  const clean: Record<string, string> = {};
-
-  for (const [key, value] of Object.entries(process.env)) {
-    if (value !== undefined && !key.startsWith('ANTHROPIC_')) {
-      clean[key] = value;
-    }
-  }
-
-  return clean;
-}
-
-/**
- * Prepare environment for a profile
- * Always use ANTHROPIC_AUTH_TOKEN for credentials
- */
-export async function prepareEnvironment(
+export function buildSettingsArg(
   profile: Profile,
   credential: string
-): Promise<Record<string, string>> {
-  const env = sanitizeEnvironment();
-
-  // Always use ANTHROPIC_AUTH_TOKEN
-  env['ANTHROPIC_AUTH_TOKEN'] = credential;
+): string {
+  const settings: { env: Record<string, string> } = {
+    env: {
+      ANTHROPIC_AUTH_TOKEN: credential
+    }
+  };
 
   // Set base URL if not default Anthropic
   if (profile.baseUrl !== 'https://api.anthropic.com') {
-    env['ANTHROPIC_BASE_URL'] = profile.baseUrl;
+    settings.env.ANTHROPIC_BASE_URL = profile.baseUrl;
   }
 
-  return env;
+  return JSON.stringify(settings);
 }
 
 /**
@@ -107,8 +94,10 @@ export async function executeWithProfile(
     process.exit(1);
   }
 
-  // Prepare environment
-  const env = await prepareEnvironment(targetProfile, credential);
+  // Build --settings argument with higher priority than environment variables
+  const settingsJson = buildSettingsArg(targetProfile, credential);
+  // Wrap JSON in single quotes for shell compatibility
+  const settingsArg = `'${settingsJson}'`;
 
   // Determine command to run
   const cmdBinary = process.env.CLAUDE_CMD || args.find((arg) => arg === '--cmd')
@@ -122,6 +111,9 @@ export async function executeWithProfile(
     claudeArgs = [...args.slice(0, cmdIndex), ...args.slice(cmdIndex + 2)];
   }
 
+  // Add --settings parameter at the beginning (before other args for proper parsing)
+  claudeArgs = ['--settings', settingsArg, ...claudeArgs];
+
   // Add --model parameter if profile has model configured and not already specified
   if (targetProfile.model && !claudeArgs.includes('--model')) {
     claudeArgs = ['--model', targetProfile.model, ...claudeArgs];
@@ -134,9 +126,8 @@ export async function executeWithProfile(
     console.log(chalk.blue(`   Model: ${targetProfile.model}`));
   }
 
-  // Execute
+  // Execute - use process.env directly (settings will override env vars via --settings)
   const child = spawn(cmdBinary, claudeArgs, {
-    env,
     stdio: 'inherit',
     shell: true
   });
